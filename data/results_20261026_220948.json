@@ -1,0 +1,95 @@
+{
+    "total_programs": 4,
+    "results": [
+        {
+            "program_a": "programA.cpp",
+            "program_b": "programB.cpp",
+            "features": {
+                "cosine_similarity": 1.0,
+                "fingerprint_overlap": 1.0,
+                "token_similarity": 1.0
+            },
+            "knn": {
+                "k": 3,
+                "label": "CO DAU HIEU DAO VAN",
+                "confidence": 100.0
+            }
+        },
+        {
+            "program_a": "programA.cpp",
+            "program_b": "programC.cpp",
+            "features": {
+                "cosine_similarity": 0.4237,
+                "fingerprint_overlap": 0.6667,
+                "token_similarity": 0.9627
+            },
+            "knn": {
+                "k": 3,
+                "label": "CO DAU HIEU DAO VAN",
+                "confidence": 100.0
+            }
+        },
+        {
+            "program_a": "programA.cpp",
+            "program_b": "programD.cpp",
+            "features": {
+                "cosine_similarity": 0.1433,
+                "fingerprint_overlap": 0.2381,
+                "token_similarity": 0.931
+            },
+            "knn": {
+                "k": 3,
+                "label": "KHONG CO DAU HIEU DAO VAN",
+                "confidence": 100.0
+            }
+        },
+        {
+            "program_a": "programB.cpp",
+            "program_b": "programC.cpp",
+            "features": {
+                "cosine_similarity": 0.4237,
+                "fingerprint_overlap": 0.6667,
+                "token_similarity": 0.9627
+            },
+            "knn": {
+                "k": 3,
+                "label": "CO DAU HIEU DAO VAN",
+                "confidence": 100.0
+            }
+        },
+        {
+            "program_a": "programB.cpp",
+            "program_b": "programD.cpp",
+            "features": {
+                "cosine_similarity": 0.1433,
+                "fingerprint_overlap": 0.2381,
+                "token_similarity": 0.931
+            },
+            "knn": {
+                "k": 3,
+                "label": "KHONG CO DAU HIEU DAO VAN",
+                "confidence": 100.0
+            }
+        },
+        {
+            "program_a": "programC.cpp",
+            "program_b": "programD.cpp",
+            "features": {
+                "cosine_similarity": 0.2185,
+                "fingerprint_overlap": 0.225,
+                "token_similarity": 0.9321
+            },
+            "knn": {
+                "k": 3,
+                "label": "KHONG CO DAU HIEU DAO VAN",
+                "confidence": 100.0
+            }
+        }
+    ],
+    "raw_codes": {
+        "programA.cpp": "#include <iostream>\n\nusing namespace std;\n\nint sum(int a, int b)\n{\n    int result = a + b;\n\n    return result;\n}\n\nint main()\n{\n    int x = 10;\n    int y = 20;\n\n    cout << sum(x, y);\n\n    return 0;\n}",
+        "programB.cpp": "#include <iostream>\n\nusing namespace std;\n\nint addNumbers(int x, int y)\n{\n    int total = x + y;\n\n    return total;\n}\n\nint main()\n{\n    int first = 10;\n    int second = 20;\n\n    cout << addNumbers(first, second);\n\n    return 0;\n}",
+        "programC.cpp": "#include <iostream>\n\nusing namespace std;\n\nint findLargest(int numbers[], int size)\n{\n    int largest = numbers[0];\n\n    for (int i = 1; i < size; i++)\n    {\n        if (numbers[i] > largest)\n        {\n            largest = numbers[i];\n        }\n    }\n\n    return largest;\n}\n\nint main()\n{\n    int numbers[] = {12, 45, 7, 23, 31};\n\n    int size = 5;\n\n    int result = findLargest(numbers, size);\n\n    cout << \"So lon nhat: \" << result;\n\n    return 0;\n}",
+        "programD.cpp": "#include <iostream>\n\nusing namespace std;\n\nbool isPrime(int number)\n{\n    if (number < 2)\n    {\n        return false;\n    }\n\n    for (int i = 2; i * i <= number; i++)\n    {\n        if (number % i == 0)\n        {\n            return false;\n        }\n    }\n\n    return true;\n}\n\nint main()\n{\n    int number = 29;\n\n    if (isPrime(number))\n    {\n        cout << \"La so nguyen to\";\n    }\n    else\n    {\n        cout << \"Khong phai so nguyen to\";\n    }\n\n    return 0;\n}"
+    }
+}

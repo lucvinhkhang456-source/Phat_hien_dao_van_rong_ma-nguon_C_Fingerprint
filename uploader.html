@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import File - Hệ Thống Phát Hiện Đạo Văn Code</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#5B8DEF',
+            brandDark: '#4A7BE0'
+          }
+        }
+      },
+      safelist: [
+        'bg-blue-50',
+        'bg-white',
+        'border-blue-100',
+        'bg-gray-50',
+        'hover:bg-gray-50',
+        'bg-red-500',
+        'bg-yellow-500',
+        'bg-green-500',
+        'text-red-700',
+        'text-green-700',
+        'bg-red-100',
+        'bg-green-100',
+        'hover:bg-red-200',
+        'hover:bg-green-200',
+        'bg-gray-800',
+        'text-brand'
+      ]
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #f3f4f6;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      transition: all 0.2s;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: #5B8DEF;
+      background-color: #f0f5ff;
+    }
+
+    .file-item {
+      transition: all 0.2s;
+    }
+
+    .file-item:hover {
+      background-color: #eef4ff;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide-down {
+      animation: slideDown 0.2s ease-out;
+    }
+  </style>
+</head>
+
+<body class="p-6">
+
+  <!-- ================= VIEW 1: UPLOAD ================= -->
+  <div id="uploadView" class="flex items-center justify-center min-h-[80vh]">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
+      <div class="px-6 pt-6 pb-4">
+        <h1 class="text-xl font-semibold text-gray-700">File Uploader</h1>
+        <p class="text-xs text-gray-400 mt-1">Hỗ trợ nhiều file .cpp & tự động giải nén ZIP</p>
+      </div>
+
+      <div class="px-6 pb-4">
+        <label id="dropZone"
+          class="drop-zone flex flex-col items-center justify-center py-10 rounded-md cursor-pointer">
+          <input type="file" id="fileInput" multiple class="hidden" accept=".cpp,.zip">
+
+          <svg class="w-12 h-12 text-brand mb-2" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+          </svg>
+
+          <span class="text-sm text-gray-500">Browse file to upload</span>
+          <span class="text-xs text-gray-400 mt-1">hoặc kéo thả vào đây</span>
+        </label>
+      </div>
+
+      <div id="fileList" class="px-6 pb-4 space-y-2 max-h-80 overflow-y-auto"></div>
+
+      <div class="border-t border-gray-100 px-6 py-4 bg-gray-50">
+        <div class="flex items-center justify-between mb-3 text-xs text-gray-500">
+          <span id="statsText">Chưa có file nào</span>
+          <button id="clearBtn" type="button" class="text-red-500 hover:text-red-700 font-medium hidden">
+            Xóa tất cả
+          </button>
+        </div>
+
+        <button id="submitBtn" disabled type="button"
+          class="w-full py-2.5 rounded-md font-medium text-white bg-brand hover:bg-brandDark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+          <svg id="submitIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span id="submitText">Submit & Phân tích</span>
+        </button>
+
+        <details class="mt-3">
+          <summary class="text-xs text-gray-500 cursor-pointer select-none">
+            Cấu hình API
+          </summary>
+
+          <div class="mt-2 space-y-2">
+            <label class="block text-xs text-gray-500">API URL</label>
+            <input id="apiUrlInput" type="text"
+              class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand"
+              placeholder="http://localhost:5000/api/upload">
+
+            <button id="saveApiUrlBtn" type="button"
+              class="px-2 py-1 text-xs rounded-md bg-gray-800 text-white hover:bg-gray-700">
+              Lưu API
+            </button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 2: LOADING ================= -->
+  <div id="loadingView" class="hidden flex items-center justify-center min-h-[80vh]">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-brand border-t-transparent mb-4">
+      </div>
+      <h3 class="text-xl font-semibold text-gray-700">Đang phân tích mã nguồn...</h3>
+      <p class="text-gray-500 mt-2">Hệ thống đang gửi file lên server và chờ kết quả</p>
+      <p class="text-xs text-gray-400 mt-2">Sau khi có dữ liệu, trang sẽ chuyển sang dashboard.html</p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"
+    class="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 translate-y-4 transition-all duration-300 pointer-events-none z-50">
+  </div>
+
+  <script>
+    // ===== KEY LƯU DỮ LIỆU SANG DASHBOARD =====
+    const DATA_STORAGE_KEY = 'plag_dashboard_data';
+
+    // Tự động lấy đúng link dashboard theo origin hiện tại.
+    // Nếu đang chạy http://127.0.0.1:5500/index.html
+    // thì sẽ chuyển sang http://127.0.0.1:5500/dashboard.html
+    let dashboardUrl = 'dashboard.html';
+    try {
+      dashboardUrl = new URL('dashboard.html', window.location.href).href;
+    } catch (e) {
+      console.warn('Không tạo được absolute URL cho dashboard.html');
+    }
+
+    // Nếu bạn muốn ép dùng đúng link này, bỏ comment dòng dưới:
+    // dashboardUrl = 'http://127.0.0.1:5500/dashboard.html';
+
+    const DEFAULT_API_URL = 'http://localhost:5000/api/upload';
+
+    // ===== STORAGE SAFE =====
+    const storage = {
+      get(key, fallback = null) {
+        try {
+          const value = localStorage.getItem(key);
+          return value === null ? fallback : value;
+        } catch {
+          return fallback;
+        }
+      },
+      set(key, value) {
+        try {
+          localStorage.setItem(key, value);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    // ===== GLOBAL DOM =====
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const submitIcon = document.getElementById('submitIcon');
+    const clearBtn = document.getElementById('clearBtn');
+    const statsText = document.getElementById('statsText');
+    const toast = document.getElementById('toast');
+
+    const uploadView = document.getElementById('uploadView');
+    const loadingView = document.getElementById('loadingView');
+
+    const apiUrlInput = document.getElementById('apiUrlInput');
+    const saveApiUrlBtn = document.getElementById('saveApiUrlBtn');
+
+    // ===== STATE =====  
+    let files = [];
+    let idCounter = 0;
+    let isSubmitting = false;
+    let toastTimer = null;
+
+    // ===== CHẶN TRÌNH DUYỆT TỰ MỞ FILE / RELOAD KHI KÉO THẢ =====
+    ['dragenter', 'dragover', 'drop'].forEach((eventName) => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+      }, true);
+    });
+
+    // ===== HELPERS =====
+    function getApiUrl() {
+      const value = apiUrlInput?.value?.trim();
+      return value || DEFAULT_API_URL;
+    }
+
+    function formatSize(bytes) {
+      const value = Number(bytes || 0);
+      if (value === 0) return '0 B';
+
+      const units = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(value) / Math.log(1024));
+      return (value / Math.pow(1024, i)).toFixed(1) + ' ' + units[i];
+    }
+
+    function getFileIcon(name, isZip) {
+      if (isZip) return '📦';
+
+      const ext = String(name || '').split('.').pop().toLowerCase();
+      if (['cpp', 'c', 'h', 'hpp'].includes(ext)) return '💻';
+
+      return '📄';
+    }
+
+    function showToast(message) {
+      if (!toast) return;
+
+      clearTimeout(toastTimer);
+
+      toast.textContent = message;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+
+      toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(16px)';
+      }, 3500);
+    }
+
+    function showView(view) {
+      uploadView.classList.add('hidden');
+      loadingView.classList.add('hidden');
+      view.classList.remove('hidden');
+    }
+
+    function saveDashboardData(payload) {
+      const json = JSON.stringify(payload);
+
+      try {
+        sessionStorage.setItem(DATA_STORAGE_KEY, json);
+        console.log('Đã lưu dữ liệu vào sessionStorage');
+        return true;
+      } catch (sessionError) {
+        console.warn('sessionStorage lỗi:', sessionError);
+      }
+
+      try {
+        localStorage.setItem(DATA_STORAGE_KEY, json);
+        console.log('Đã lưu dữ liệu vào localStorage dự phòng');
+        return true;
+      } catch (localError) {
+        console.warn('localStorage lỗi:', localError);
+      }
+
+      return false;
+    }
+
+    // ===== DRAG & DROP CHO DROPZONE =====
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('dragover');
+      });
+    });
+
+    dropZone.addEventListener('drop', async e => {
+      e.preventDefault();
+      const selectedFiles = Array.from(e.dataTransfer?.files || []);
+      await handleFiles(selectedFiles);
+    });
+
+    fileInput.addEventListener('change', async e => {
+      const selectedFiles = Array.from(e.target.files || []);
+      e.target.value = '';
+      await handleFiles(selectedFiles);
+    });
+
+    // ===== FILE HANDLING =====
+    async function handleFiles(fileListInput) {
+      if (!fileListInput || fileListInput.length === 0) {
+        return;
+      }
+
+      let addedCount = 0;
+
+      for (const file of fileListInput) {
+        const name = file.name.toLowerCase();
+
+        if (name.endsWith('.zip')) {
+          await processZip(file);
+          addedCount++;
+        } else if (name.endsWith('.cpp')) {
+          addDirectFile(file);
+          addedCount++;
+        } else {
+          showToast(`⚠️ Bỏ qua file không hợp lệ: ${file.name}`);
+        }
+      }
+
+      render();
+
+      if (addedCount > 0) {
+        showToast(`✅ Đã thêm ${addedCount} file`);
+      }
+    }
+
+    function addDirectFile(file) {
+      const item = {
+        id: idCounter++,
+        name: file.name,
+        size: file.size,
+        blob: file,
+        status: 'ready',
+        source: 'direct',
+        parentId: null,
+        children: [],
+        expanded: false,
+        isZip: false
+      };
+
+      files.push(item);
+    }
+
+    async function processZip(zipFile) {
+      try {
+        if (typeof JSZip === 'undefined') {
+          throw new Error('JSZip chưa tải được. Kiểm tra CDN hoặc mạng.');
+        }
+
+        const zip = await JSZip.loadAsync(zipFile);
+        const zipId = idCounter++;
+
+        const zipObj = {
+          id: zipId,
+          name: zipFile.name,
+          size: zipFile.size,
+          blob: zipFile,
+          status: 'ready',
+          source: 'direct',
+          parentId: null,
+          children: [],
+          expanded: true,
+          isZip: true
+        };
+
+        files.push(zipObj);
+
+        let count = 0;
+
+        for (const path in zip.files) {
+          const entry = zip.files[path];
+
+          if (entry.dir) continue;
+
+          const fileName = path.split('/').pop();
+          if (!fileName.toLowerCase().endsWith('.cpp')) continue;
+
+          const blob = await entry.async('blob');
+
+          const child = {
+            id: idCounter++,
+            name: fileName,
+            path: path,
+            size: blob.size,
+            blob: blob,
+            status: 'ready',
+            source: 'zip',
+            parentId: zipId,
+            children: [],
+            expanded: false,
+            isZip: false
+          };
+
+          files.push(child);
+          zipObj.children.push(child.id);
+          count++;
+        }
+
+        showToast(`📦 Đã giải nén ${count} file .cpp`);
+      } catch (error) {
+        console.error('Lỗi xử lý ZIP:', error);
+        showToast('❌ Lỗi khi giải nén ZIP: ' + error.message);
+      }
+    }
+
+    function deleteFile(id) {
+      const file = files.find(f => f.id === id);
+      if (!file) return;
+
+      if (file.isZip) {
+        files = files.filter(f => f.id !== id && f.parentId !== id);
+      } else {
+        files = files.filter(f => f.id !== id);
+
+        if (file.parentId != null) {
+          const parent = files.find(f => f.id === file.parentId);
+          if (parent && Array.isArray(parent.children)) {
+            parent.children = parent.children.filter(childId => childId !== id);
+          }
+        }
+      }
+
+      render();
+    }
+
+    clearBtn.addEventListener('click', () => {
+      if (files.length === 0) return;
+
+      if (confirm('Xóa tất cả file?')) {
+        files = [];
+        render();
+        showToast('🗑️ Đã xóa tất cả');
+      }
+    });
+
+    // ===== API CONFIG =====
+    if (apiUrlInput) {
+      apiUrlInput.value = storage.get('plag_api_url', DEFAULT_API_URL);
+    }
+
+    if (saveApiUrlBtn) {
+      saveApiUrlBtn.addEventListener('click', () => {
+        const url = getApiUrl();
+        storage.set('plag_api_url', url);
+        showToast('✅ Đã lưu API URL');
+      });
+    }
+
+    // ===== SUBMIT =====
+    submitBtn.addEventListener('click', submitFiles);
+
+    async function submitFiles(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      if (isSubmitting) return;
+
+      const leafFiles = files.filter(f => !f.isZip);
+
+      if (leafFiles.length < 2) {
+        showToast('⚠️ Cần ít nhất 2 file .cpp để so sánh');
+        return;
+      }
+
+      let redirecting = false;
+
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      submitText.textContent = 'Đang xử lý...';
+      submitIcon.innerHTML = `
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+      `;
+
+      showView(loadingView);
+
+      const formData = new FormData();
+      leafFiles.forEach(file => {
+        formData.append('files', file.blob, file.name);
+      });
+
+      const apiUrl = getApiUrl();
+
+      try {
+        console.log('POST tới:', apiUrl);
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          body: formData
+        });
+
+        const text = await response.text();
+        console.log('Raw response:', text.slice(0, 1000));
+
+        let result;
+
+        try {
+          result = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error('Server không trả về JSON hợp lệ.');
+        }
+
+        if (result?.success === false) {
+          throw new Error(result.error || 'Server trả về success = false');
+        }
+
+        if (!response.ok) {
+          throw new Error(result?.error || `Server lỗi HTTP ${response.status}`);
+        }
+
+        const payload = result?.data ?? result;
+
+        if (!payload || !Array.isArray(payload.results)) {
+          throw new Error('Dữ liệu backend không đúng định dạng. Cần có trường results là mảng.');
+        }
+
+        const saved = saveDashboardData(payload);
+
+        if (!saved) {
+          throw new Error('Không lưu được dữ liệu phân tích để chuyển sang dashboard.html');
+        }
+
+        console.log('Chuyển sang dashboard:', dashboardUrl);
+
+        redirecting = true;
+        window.location.replace(dashboardUrl);
+
+      } catch (error) {
+        console.error('LỖI:', error);
+
+        if (error instanceof TypeError) {
+          console.warn('Gợi ý: TypeError khi fetch thường do server chưa chạy, sai URL, CORS, hoặc mở file bằng file:///');
+        }
+
+        showToast('❌ Lỗi: ' + error.message);
+        showView(uploadView);
+      } finally {
+        if (redirecting) {
+          return;
+        }
+
+        isSubmitting = false;
+
+        const leafFilesAfter = files.filter(f => !f.isZip);
+        submitBtn.disabled = leafFilesAfter.length < 2;
+
+        submitText.textContent = 'Submit & Phân tích';
+        submitIcon.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+        `;
+      }
+    }
+
+    // ===== RENDER FILE LIST =====
+    function render() {
+      const topLevel = files.filter(f => !f.parentId);
+
+      if (topLevel.length === 0) {
+        fileList.innerHTML = `<div class="text-center text-gray-400 text-sm py-4">Chưa có file nào</div>`;
+      } else {
+        fileList.innerHTML = topLevel.map(f => renderFileItem(f)).join('');
+      }
+
+      const leafFiles = files.filter(f => !f.isZip);
+      const totalSize = leafFiles.reduce((sum, f) => sum + Number(f.size || 0), 0);
+
+      if (leafFiles.length > 0) {
+        statsText.textContent = `${leafFiles.length} file • ${formatSize(totalSize)}`;
+        clearBtn.classList.remove('hidden');
+      } else {
+        statsText.textContent = 'Chưa có file nào';
+        clearBtn.classList.add('hidden');
+      }
+
+      submitBtn.disabled = leafFiles.length < 2 || isSubmitting;
+    }
+
+    function renderFileItem(f) {
+      const icon = getFileIcon(f.name, f.isZip);
+
+      let html = `
+        <div class="file-item flex items-center gap-3 p-3 bg-blue-50 rounded-md">
+          <div class="text-2xl">${icon}</div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium text-gray-700 truncate">${f.name}</span>
+              <button type="button" onclick="deleteFile(${f.id})" class="text-gray-400 hover:text-red-500 ml-2">✕</button>
+            </div>
+            <div class="text-xs text-gray-400">${formatSize(f.size)}</div>
+          </div>
+        </div>
+      `;
+
+      if (f.isZip && f.expanded && f.children.length > 0) {
+        html += `<div class="ml-6 space-y-1.5 slide-down">`;
+
+        f.children.forEach(childId => {
+          const child = files.find(x => x.id === childId);
+          if (child) html += renderChildItem(child);
+        });
+
+        html += `</div>`;
+      }
+
+      return html;
+    }
+
+    function renderChildItem(f) {
+      return `
+        <div class="file-item flex items-center gap-2 p-2 bg-white rounded-md border border-blue-100">
+          <div class="text-lg">💻</div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-gray-600 truncate">${f.name}</span>
+              <button type="button" onclick="deleteFile(${f.id})" class="text-gray-400 hover:text-red-500">✕</button>
+            </div>
+            <div class="text-xs text-gray-400">
+              ${formatSize(f.size)} <span class="text-brand">• trong ZIP</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ===== INIT =====
+    render();
+  </script>
+
+</body>
+
+</html>

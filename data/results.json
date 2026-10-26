@@ -1,0 +1,89 @@
+{
+    "total_programs": 4,
+    "results": [
+        {
+            "program_a": "programA.cpp",
+            "program_b": "programB.cpp",
+            "features": {
+                "cosine_similarity": 1.0000,
+                "fingerprint_overlap": 1.0000,
+                "token_similarity": 1.0000
+            },
+            "knn": {
+                "k": 3,
+                "label": "CO DAU HIEU DAO VAN",
+                "confidence": 100.0000
+            }
+        },
+        {
+            "program_a": "programA.cpp",
+            "program_b": "programC.cpp",
+            "features": {
+                "cosine_similarity": 0.4237,
+                "fingerprint_overlap": 0.6667,
+                "token_similarity": 0.9627
+            },
+            "knn": {
+                "k": 3,
+                "label": "CO DAU HIEU DAO VAN",
+                "confidence": 100.0000
+            }
+        },
+        {
+            "program_a": "programA.cpp",
+            "program_b": "programD.cpp",
+            "features": {
+                "cosine_similarity": 0.1433,
+                "fingerprint_overlap": 0.2381,
+                "token_similarity": 0.9310
+            },
+            "knn": {
+                "k": 3,
+                "label": "KHONG CO DAU HIEU DAO VAN",
+                "confidence": 100.0000
+            }
+        },
+        {
+            "program_a": "programB.cpp",
+            "program_b": "programC.cpp",
+            "features": {
+                "cosine_similarity": 0.4237,
+                "fingerprint_overlap": 0.6667,
+                "token_similarity": 0.9627
+            },
+            "knn": {
+                "k": 3,
+                "label": "CO DAU HIEU DAO VAN",
+                "confidence": 100.0000
+            }
+        },
+        {
+            "program_a": "programB.cpp",
+            "program_b": "programD.cpp",
+            "features": {
+                "cosine_similarity": 0.1433,
+                "fingerprint_overlap": 0.2381,
+                "token_similarity": 0.9310
+            },
+            "knn": {
+                "k": 3,
+                "label": "KHONG CO DAU HIEU DAO VAN",
+                "confidence": 100.0000
+            }
+        },
+        {
+            "program_a": "programC.cpp",
+            "program_b": "programD.cpp",
+            "features": {
+                "cosine_similarity": 0.2185,
+                "fingerprint_overlap": 0.2250,
+                "token_similarity": 0.9321
+            },
+            "knn": {
+                "k": 3,
+                "label": "KHONG CO DAU HIEU DAO VAN",
+                "confidence": 100.0000
+            }
+        }
+    ]
+}
